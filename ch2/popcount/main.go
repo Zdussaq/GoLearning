@@ -17,6 +17,19 @@ func init() {
 }
 
 // PopCount returns the population count (number of set bits) of x.
+//Exercise 2.3 - runtime 3.629 ns
+func PopCount(x uint64) int {
+	var retInt int
+	for i := 0; i < 8; i++ {
+		retInt += int(pc[byte(x>>(i*8))])
+	}
+
+	return retInt
+}
+
+//Original function - runtime is 0.2426 ns
+/*
+// PopCount returns the population count (number of set bits) of x.
 func PopCount(x uint64) int {
 	return int(pc[byte(x>>(0*8))] +
 		pc[byte(x>>(1*8))] +
@@ -27,5 +40,5 @@ func PopCount(x uint64) int {
 		pc[byte(x>>(6*8))] +
 		pc[byte(x>>(7*8))])
 }
-
+*/
 //!-
