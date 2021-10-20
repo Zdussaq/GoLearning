@@ -11,27 +11,59 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"log"
 	"math/cmplx"
-	"os"
+	"net/http"
+	"strconv"
 )
 
-func main() {
-	const (
-		xmin, ymin, xmax, ymax = -2, -2, +2, +2
-		width, height          = 1024, 1024
-	)
+type ImageParams struct {
+	xmin, ymin, xmax, ymax, width, height float64
+}
 
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for py := 0; py < height; py++ {
-		y := float64(py)/height*(ymax-ymin) + ymin
-		for px := 0; px < width; px++ {
-			x := float64(px)/width*(xmax-xmin) + xmin
+func main() {
+	imageParams := ImageParams{-2, -2, 2, 2, 1024, 1024}
+
+	http.HandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
+		serveImage(rw, r, imageParams)
+	})
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+}
+
+func serveImage(rw http.ResponseWriter, r *http.Request, imageParams ImageParams) {
+
+	r.ParseForm()
+	for k, v := range r.Form {
+		switch k {
+		case "xmin":
+			imageParams.xmin, _ = strconv.ParseFloat(v[0], 64)
+		case "xmax":
+			imageParams.xmax, _ = strconv.ParseFloat(v[0], 64)
+		case "ymin":
+			imageParams.ymin, _ = strconv.ParseFloat(v[0], 64)
+		case "ymax":
+			imageParams.ymax, _ = strconv.ParseFloat(v[0], 64)
+		case "height":
+			imageParams.height, _ = strconv.ParseFloat(v[0], 64)
+		}
+	}
+
+	if imageParams.ymin >= imageParams.xmax || imageParams.xmin >= imageParams.xmax {
+		http.Error(rw, "min coordinate greater than max", http.StatusBadRequest)
+		return
+	}
+
+	img := image.NewRGBA(image.Rect(0, 0, int(imageParams.width), int(imageParams.height)))
+	for py := 0; py < int(imageParams.height); py++ {
+		y := float64(py)/imageParams.height*(imageParams.ymax-imageParams.ymin) + imageParams.ymin
+		for px := 0; px < int(imageParams.width); px++ {
+			x := float64(px)/imageParams.width*(imageParams.xmax-imageParams.xmin) + imageParams.xmin
 			z := complex(x, y)
 			// Image point (px, py) represents complex value z.
 			img.Set(px, py, mandelbrot(z))
 		}
 	}
-	png.Encode(os.Stdout, img) // NOTE: ignoring errors
+	png.Encode(rw, img) // NOTE: ignoring errors
 }
 
 func mandelbrot(z complex128) color.Color {

@@ -16,17 +16,17 @@ import (
 )
 
 const (
-	cells   = 100                 // number of grid cells
-	xyrange = 30.0                // axis ranges (-xyrange..+xyrange)
-	xyscale = width / 2 / xyrange // pixels per x or y unit
-	zscale  = height * 0.4        // pixels per z unit
-	angle   = math.Pi / 6         // angle of x, y axes (=30°)
+	width, height = 600, 320            // canvas size in pixels
+	cells         = 100                 // number of grid cells
+	xyrange       = 30.0                // axis ranges (-xyrange..+xyrange)
+	xyscale       = width / 2 / xyrange // pixels per x or y unit
+	zscale        = height * 0.4        // pixels per z unit
+	angle         = math.Pi / 6         // angle of x, y axes (=30°)
 )
 
 type zFunc func(x, y float64) float64
 
 var sin30, cos30 = math.Sin(angle), math.Cos(angle) // sin(30°), cos(30°)
-var width, height = 600, 320
 
 func main() {
 
@@ -70,7 +70,7 @@ func displaySVG(output io.Writer, f zFunc) {
 	fmt.Fprintln(output, "</svg>")
 }
 
-//For exercise 3.3 - adding color grading to the image.
+//For exercise 3.3 - adding color grading to
 func color(i, j int, min, max float64, f zFunc) string {
 	localMin := math.NaN()
 	localMax := math.NaN()
