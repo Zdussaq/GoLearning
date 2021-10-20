@@ -53,6 +53,7 @@ func displaySVG(output io.Writer, f zFunc) {
 	fmt.Fprintf(output, "<svg xmlns='http://www.w3.org/2000/svg' "+
 		"style='stroke: grey; fill: white; stroke-width: 0.7' "+
 		"width='%d' height='%d'>", width, height)
+	zMin, zMax := findMinMax(f)
 	for i := 0; i < cells; i++ {
 		for j := 0; j < cells; j++ {
 			ax, ay := corner(i+1, j, f)
@@ -61,12 +62,71 @@ func displaySVG(output io.Writer, f zFunc) {
 			dx, dy := corner(i+1, j+1, f)
 			//Exercise 1.1 prevent the code from printing non numeric float64 vals.
 			if !(math.IsNaN(ax) || math.IsNaN(ay) || math.IsNaN(bx) || math.IsNaN(by) || math.IsNaN(cx) || math.IsNaN(cy) || math.IsNaN(dx) || math.IsNaN(dy)) {
-				fmt.Fprintf(output, "<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
-					ax, ay, bx, by, cx, cy, dx, dy)
+				fmt.Fprintf(output, "<polygon points='%g,%g %g,%g %g,%g %g,%g' style='stroke:%s;fill:#333333'/>\n",
+					ax, ay, bx, by, cx, cy, dx, dy, color(i, j, zMin, zMax, f))
 			}
 		}
 	}
 	fmt.Fprintln(output, "</svg>")
+}
+
+func color(i, j int, min, max float64, f zFunc) string {
+	localMin := math.NaN()
+	localMax := math.NaN()
+	for xOffset := 0; xOffset < 2; xOffset++ {
+		for yOffset := 0; yOffset < 2; yOffset++ {
+			x := xyrange * (float64(i+xOffset)/cells - 0.5)
+			y := xyrange * (float64(j+yOffset)/cells - 0.5)
+			z := f(x, y)
+			if math.IsNaN(localMax) || z > localMax {
+				localMax = z
+			}
+			if math.IsNaN(localMin) || z < localMin {
+				localMin = z
+			}
+
+		}
+	}
+
+	fmt.Printf("Local Max: %f\t Local Min: %f \t Max: %f \t Min: %f\n", localMax, localMin, max, min)
+
+	if math.Abs(localMax) > math.Abs(localMin) {
+		redIndex := math.Exp(math.Abs(localMax)) / math.Exp(math.Abs(max)) * 255
+		if redIndex > 255 {
+			redIndex = 255
+		}
+		return fmt.Sprintf("#%02x0000", int(redIndex))
+	} else {
+		blueIndex := math.Exp(math.Abs(localMin)) / math.Exp(math.Abs(min)) * 255
+		if blueIndex > 255 {
+			blueIndex = 255
+		}
+		return fmt.Sprintf("#0000%02x", int(blueIndex))
+	}
+}
+
+func findMinMax(f zFunc) (float64, float64) {
+	min := math.MaxFloat64
+	max := math.SmallestNonzeroFloat64
+	for i := 0; i < cells; i++ {
+		for j := 0; j < cells; j++ {
+			for xOffset := 0; xOffset < 2; xOffset++ {
+				for yOffset := 0; yOffset < 2; yOffset++ {
+					x := xyrange * (float64(i+xOffset)/cells - 0.5)
+					y := xyrange * (float64(j+yOffset)/cells - 0.5)
+					z := f(x, y)
+					if !math.IsNaN(z) && !math.IsInf(z, 0) && z > max {
+						max = z
+					} else if !math.IsNaN(z) && !math.IsInf(z, 0) && z < min {
+						min = z
+					}
+
+				}
+			}
+		}
+	}
+
+	return min, max
 }
 
 func corner(i, j int, f zFunc) (float64, float64) {
