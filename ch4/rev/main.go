@@ -28,6 +28,8 @@ func main() {
 	reverse(s[2:])
 	reverse(s)
 	fmt.Println(s) // "[2 3 4 5 0 1]"
+	reversePointer(&s)
+	fmt.Println(s) // "[2 3 4 5 0 1]"
 	//!-slice
 
 	// Interactive test of reverse.
@@ -54,6 +56,12 @@ outer:
 func reverse(s []int) {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
+	}
+}
+
+func reversePointer(s *[]int) {
+	for i, j := 0, len(*s)-1; i < j; i, j = i+1, j-1 {
+		(*s)[i], (*s)[j] = (*s)[j], (*s)[i]
 	}
 }
 
