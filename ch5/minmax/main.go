@@ -10,7 +10,7 @@ func main() {
 func max(vars ...int) (int, error) {
 
 	if len(vars) < 1 {
-		return -1, fmt.Errorf("must pass at least one var.")
+		return -1, fmt.Errorf("must pass at least one var")
 	}
 
 	max := vars[0]
@@ -28,7 +28,7 @@ func max(vars ...int) (int, error) {
 func min(vars ...int) (int, error) {
 
 	if len(vars) < 1 {
-		return -1, fmt.Errorf("must pass at least one var.")
+		return -1, fmt.Errorf("must pass at least one var")
 	}
 
 	min := vars[0]
